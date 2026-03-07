@@ -112,6 +112,15 @@ export const store = {
         return store.getTask(id);
     },
 
+    deleteTask: async (id: string): Promise<void> => {
+        const { error } = await supabase
+            .from(TASKS_TAB)
+            .delete()
+            .eq("id", id);
+
+        if (error) throw error;
+    },
+
     getLogs: async (taskId: string, month?: string): Promise<DailyLog[]> => {
         let query = supabase
             .from(LOGS_TAB)

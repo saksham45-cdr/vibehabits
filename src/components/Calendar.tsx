@@ -11,6 +11,12 @@ interface CalendarProps {
     onMonthChange: (month: string) => void;
     onToggleLog: (taskId: string, date: string) => void;
     selectedTaskId: string | null;
+    selectedTaskName?: string;
+    selectedTaskColor?: string;
+    onPrevHabit?: () => void;
+    onNextHabit?: () => void;
+    habitIndex?: number;
+    habitCount?: number;
 }
 
 const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -26,6 +32,12 @@ export default function Calendar({
     onMonthChange,
     onToggleLog,
     selectedTaskId,
+    selectedTaskName,
+    selectedTaskColor,
+    onPrevHabit,
+    onNextHabit,
+    habitIndex,
+    habitCount,
 }: CalendarProps) {
     const [year, month] = currentMonth.split("-").map(Number);
 
@@ -101,6 +113,33 @@ export default function Calendar({
 
     return (
         <div className="calendar-container">
+            {/* Habit slider */}
+            {habitCount && habitCount > 0 ? (
+                <div className="calendar-habit-slider">
+                    <button className="calendar-nav-btn" onClick={onPrevHabit} aria-label="Previous habit">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                    </button>
+                    <div className="calendar-habit-name">
+                        {selectedTaskColor && (
+                            <span className="calendar-habit-dot" style={{ backgroundColor: selectedTaskColor }} />
+                        )}
+                        <span>{selectedTaskName ?? "Select a habit"}</span>
+                        {habitCount > 1 && (
+                            <span className="calendar-habit-counter">{(habitIndex ?? 0) + 1} / {habitCount}</span>
+                        )}
+                    </div>
+                    <button className="calendar-nav-btn" onClick={onNextHabit} aria-label="Next habit">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <path d="M7.5 15L12.5 10L7.5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                    </button>
+                </div>
+            ) : (
+                <div className="calendar-habit-empty">No habits yet — create one to get started</div>
+            )}
+
             {/* Month navigation */}
             <div className="calendar-header">
                 <button
@@ -154,9 +193,9 @@ export default function Calendar({
                     return (
                         <button
                             key={date}
-                            className={`calendar-day ${!inMonth ? "calendar-day-outside" : ""} ${isToday ? "calendar-day-today" : ""} ${isSelected ? "calendar-day-active" : ""}`}
-                            onClick={() => inMonth && handleDayClick(date)}
-                            disabled={!inMonth || !selectedTaskId}
+                            className={`calendar-day ${!inMonth ? "calendar-day-outside" : ""} ${isToday ? "calendar-day-today" : ""} ${isSelected ? "calendar-day-active" : ""} ${date > today ? "calendar-day-future" : ""}`}
+                            onClick={() => inMonth && date <= today && handleDayClick(date)}
+                            disabled={!inMonth || !selectedTaskId || date > today}
                             aria-label={`${date}${isToday ? " (Today)" : ""}${dotColors.length ? ` - ${dotColors.length} tasks completed` : ""}`}
                         >
                             <span className="calendar-day-number">{day}</span>

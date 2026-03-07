@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import Calendar from "@/components/Calendar";
 import TaskList from "@/components/TaskList";
 import TaskForm from "@/components/TaskForm";
@@ -72,6 +72,33 @@ export default function Home() {
     }
   };
 
+  // Delete task
+  const handleDeleteTask = async (taskId: string) => {
+    try {
+      await store.deleteTask(taskId);
+      setTasks(prev => prev.filter(t => t.id !== taskId));
+      if (selectedTaskId === taskId) setSelectedTaskId(null);
+    } catch (e) {
+      console.error("Failed to delete task:", e);
+      alert("Failed to delete habit. Please try again.");
+    }
+  };
+
+  // Habit slider navigation
+  const handlePrevHabit = () => {
+    if (tasks.length === 0) return;
+    const idx = tasks.findIndex(t => t.id === selectedTaskId);
+    const prevIdx = idx <= 0 ? tasks.length - 1 : idx - 1;
+    setSelectedTaskId(tasks[prevIdx].id);
+  };
+
+  const handleNextHabit = () => {
+    if (tasks.length === 0) return;
+    const idx = tasks.findIndex(t => t.id === selectedTaskId);
+    const nextIdx = idx === -1 || idx === tasks.length - 1 ? 0 : idx + 1;
+    setSelectedTaskId(tasks[nextIdx].id);
+  };
+
   // Create task
   const handleCreateTask = async (data: { name: string; frequency: Frequency; color: string }) => {
     if (!user) return;
@@ -97,6 +124,17 @@ export default function Home() {
   const handleLogout = async () => {
     await supabase.auth.signOut();
   };
+
+  // Compute streaks for all tasks
+  const streaks = useMemo(() => {
+    const map = new Map<string, number>();
+    tasks.forEach((task) => {
+      const taskLogs = logs.filter((l) => l.taskId === task.id);
+      const result = computeStreak(taskLogs, task.frequency, today);
+      map.set(task.id, result.currentStreak);
+    });
+    return map;
+  }, [tasks, logs, today]);
 
   if (authLoading || (user && loading)) {
     return (
@@ -156,6 +194,8 @@ export default function Home() {
           selectedTaskId={selectedTaskId}
           onSelectTask={setSelectedTaskId}
           onToggleToday={(taskId) => handleToggleLog(taskId, today)}
+          onDeleteTask={handleDeleteTask}
+          streaks={streaks}
           today={today}
         />
 
@@ -171,11 +211,17 @@ export default function Home() {
       <div className="main-content">
         <Calendar
           tasks={tasks}
-          logs={logs}
+          logs={selectedTaskId ? logs.filter(l => l.taskId === selectedTaskId) : logs}
           currentMonth={currentMonth}
           onMonthChange={setCurrentMonth}
           onToggleLog={handleToggleLog}
           selectedTaskId={selectedTaskId}
+          selectedTaskName={selectedTask?.name}
+          selectedTaskColor={selectedTask?.color}
+          onPrevHabit={handlePrevHabit}
+          onNextHabit={handleNextHabit}
+          habitIndex={tasks.findIndex(t => t.id === selectedTaskId)}
+          habitCount={tasks.length}
         />
 
         {/* Analytics panel */}

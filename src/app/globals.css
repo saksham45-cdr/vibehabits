@@ -259,10 +259,46 @@ button {
   text-overflow: ellipsis;
 }
 
+.task-item-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .task-item-frequency {
   font-size: 11px;
   color: var(--text-tertiary);
   text-transform: capitalize;
+}
+
+.task-streak-badge {
+  font-size: 11px;
+  font-weight: 600;
+  color: #f59e0b;
+}
+
+.task-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.task-delete-btn {
+  color: var(--text-muted);
+  opacity: 0;
+  transition: all var(--transition-fast);
+  padding: 4px;
+  border-radius: var(--radius-sm);
+}
+
+.task-item:hover .task-delete-btn {
+  opacity: 1;
+}
+
+.task-delete-btn:hover {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
 }
 
 .task-toggle-btn {
@@ -321,6 +357,46 @@ button {
   border-radius: var(--radius-xl);
   padding: 28px;
   box-shadow: var(--shadow-md);
+}
+
+.calendar-habit-slider {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.calendar-habit-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.calendar-habit-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.calendar-habit-counter {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-tertiary);
+}
+
+.calendar-habit-empty {
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-tertiary);
+  padding: 8px 0 16px;
+  border-bottom: 1px solid var(--border-subtle);
+  margin-bottom: 16px;
 }
 
 .calendar-header {
@@ -396,6 +472,11 @@ button {
 
 .calendar-day-outside {
   opacity: 0.2;
+}
+
+.calendar-day-future {
+  opacity: 0.35;
+  cursor: not-allowed;
 }
 
 .calendar-day-today {
