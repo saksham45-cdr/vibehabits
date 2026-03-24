@@ -7,6 +7,7 @@ import TaskForm from "@/components/TaskForm";
 import AnalyticsDashboard from "@/components/AnalyticsDashboard";
 import AiInsightCard from "@/components/AiInsightCard";
 import AuthPage from "@/components/AuthPage";
+import DoodhKaHisaab from "@/components/DoodhKaHisaab";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { store } from "@/lib/store";
@@ -22,6 +23,7 @@ export default function Home() {
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [showDoodh, setShowDoodh] = useState(false);
 
   // Current month for calendar
   const now = new Date();
@@ -252,6 +254,21 @@ export default function Home() {
           onCancel={() => !saving && setShowForm(false)}
           isLoading={saving}
         />
+      )}
+
+      {/* Doodh ka Hisaab FAB */}
+      <button
+        onClick={() => setShowDoodh(true)}
+        className="fixed bottom-6 right-6 z-50 flex items-center gap-2 bg-white shadow-lg rounded-full px-5 py-3 text-sm font-medium text-gray-700 border border-gray-100 hover:shadow-xl transition-all"
+      >
+        🥛 Doodh ka Hisaab
+      </button>
+
+      {/* Doodh ka Hisaab overlay */}
+      {showDoodh && (
+        <div className="fixed inset-0 z-40 bg-[#FAFBFF] overflow-y-auto">
+          <DoodhKaHisaab onClose={() => setShowDoodh(false)} />
+        </div>
       )}
     </main>
   );
