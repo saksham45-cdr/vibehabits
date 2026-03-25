@@ -32,22 +32,25 @@ export default function Home() {
   );
   const today = now.toISOString().split("T")[0];
 
-  // Fetch tasks
-  const fetchTasks = useCallback(async () => {
+  // Fetch tasks then logs in one chain — avoids the double task-fetch
+  // that happened when fetchTasks + getLogsForAllTasks both called getTasks.
+  const fetchData = useCallback(async () => {
     if (!user) return;
     try {
       const tasksData = await store.getTasks(user.id);
       setTasks(tasksData || []);
+      const taskIds = (tasksData || []).map((t) => t.id);
+      const logsData = await store.getLogsForTaskIds(taskIds, currentMonth);
+      setLogs(logsData || []);
     } catch (e) {
-      console.error("Failed to fetch tasks:", e);
+      console.error("Failed to fetch data:", e);
     }
-  }, [user]);
+  }, [user, currentMonth]);
 
-  // Fetch logs for the current month
-  const fetchLogs = useCallback(async () => {
+  const fetchLogs = useCallback(async (taskIds: string[]) => {
     if (!user) return;
     try {
-      const logsData = await store.getLogsForAllTasks(user.id, currentMonth);
+      const logsData = await store.getLogsForTaskIds(taskIds, currentMonth);
       setLogs(logsData || []);
     } catch (e) {
       console.error("Failed to fetch logs:", e);
@@ -57,20 +60,46 @@ export default function Home() {
   useEffect(() => {
     if (user) {
       setLoading(true);
-      Promise.all([fetchTasks(), fetchLogs()]).then(() => setLoading(false));
+      fetchData().then(() => setLoading(false));
     } else if (!authLoading) {
       setLoading(false);
     }
-  }, [user, authLoading, fetchTasks, fetchLogs]);
+  }, [user, authLoading, fetchData]);
 
-  // Toggle log
+  // Toggle log — optimistic update so UI responds instantly
   const handleToggleLog = async (taskId: string, date: string) => {
     if (!user) return;
+
+    const existingLog = logs.find((l) => l.taskId === taskId && l.logDate === date);
+
+    if (existingLog) {
+      // Optimistically remove
+      setLogs((prev) => prev.filter((l) => l.id !== existingLog.id));
+    } else {
+      // Optimistically add a placeholder
+      const tempLog: import("@/types/api").DailyLog = {
+        id: `temp-${taskId}-${date}`,
+        taskId,
+        logDate: date,
+        createdAt: new Date().toISOString(),
+      };
+      setLogs((prev) => [...prev, tempLog]);
+    }
+
     try {
-      await store.toggleLog(taskId, date);
-      await fetchLogs();
+      const result = await store.toggleLog(taskId, date);
+      // Replace temp placeholder with the real DB record
+      if (result.created && result.log) {
+        setLogs((prev) =>
+          prev.map((l) =>
+            l.id === `temp-${taskId}-${date}` ? result.log! : l
+          )
+        );
+      }
     } catch (e) {
       console.error("Failed to toggle log:", e);
+      // Revert on error by refetching
+      fetchLogs(tasks.map((t) => t.id));
     }
   };
 
@@ -114,7 +143,7 @@ export default function Home() {
       setShowForm(false);
 
       // Background refresh to ensure everything is in sync
-      fetchTasks();
+      fetchData();
     } catch (e) {
       console.error("Failed to create task:", e);
       alert("Failed to create habit. Please try again.");

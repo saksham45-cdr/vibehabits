@@ -152,7 +152,10 @@ export const store = {
     getLogsForAllTasks: async (userId: string, month?: string): Promise<DailyLog[]> => {
         const tasks = await store.getTasks(userId);
         const taskIds = tasks.map((t) => t.id);
+        return store.getLogsForTaskIds(taskIds, month);
+    },
 
+    getLogsForTaskIds: async (taskIds: string[], month?: string): Promise<DailyLog[]> => {
         if (taskIds.length === 0) return [];
 
         let query = supabase
@@ -169,7 +172,7 @@ export const store = {
 
         const { data, error } = await query;
         if (error) {
-            console.error("Error fetching all logs:", error);
+            console.error("Error fetching logs:", error);
             return [];
         }
 
