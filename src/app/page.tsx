@@ -201,6 +201,22 @@ export default function Home() {
           today={today}
         />
 
+        <div className="sidebar-doodh-wrapper">
+          <button
+            onClick={() => setShowDoodh(true)}
+            className="doodh-sidebar-btn"
+          >
+            <span className="doodh-btn-icon">🥛</span>
+            <span className="doodh-btn-text">
+              <span className="doodh-btn-title">Doodh ka Hisaab</span>
+              <span className="doodh-btn-sub">Track daily milk &amp; bills</span>
+            </span>
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="doodh-btn-arrow">
+              <path d="M3 7H11M8 4L11 7L8 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+        </div>
+
         <button className="logout-btn" onClick={handleLogout}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" />
@@ -255,14 +271,6 @@ export default function Home() {
           isLoading={saving}
         />
       )}
-
-      {/* Doodh ka Hisaab FAB */}
-      <button
-        onClick={() => setShowDoodh(true)}
-        className="fixed bottom-6 right-6 z-50 flex items-center gap-2 bg-white shadow-lg rounded-full px-5 py-3 text-sm font-medium text-gray-700 border border-gray-100 hover:shadow-xl transition-all"
-      >
-        🥛 Doodh ka Hisaab
-      </button>
 
       {/* Doodh ka Hisaab overlay */}
       {showDoodh && (
