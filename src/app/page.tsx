@@ -1,19 +1,25 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import dynamic from "next/dynamic";
 import Calendar from "@/components/Calendar";
 import TaskList from "@/components/TaskList";
 import TaskForm from "@/components/TaskForm";
 import AnalyticsDashboard from "@/components/AnalyticsDashboard";
 import AiInsightCard from "@/components/AiInsightCard";
 import AuthPage from "@/components/AuthPage";
-import DoodhKaHisaab from "@/components/DoodhKaHisaab";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { store } from "@/lib/store";
 import { computeStreak, computeCompletionRate } from "@/lib/streaks";
 import { addDays } from "@/lib/date-utils";
-import type { Task, DailyLog, Frequency, StreakResult } from "@/types/api";
+import type { Task, DailyLog, Frequency } from "@/types/api";
+
+// Lazy-load the milk tracker — only fetched when user opens it
+const DoodhKaHisaab = dynamic(() => import("@/components/DoodhKaHisaab"), {
+  ssr: false,
+  loading: () => null,
+});
 
 export default function Home() {
   const { user, loading: authLoading } = useAuth();
@@ -25,15 +31,22 @@ export default function Home() {
   const [saving, setSaving] = useState(false);
   const [showDoodh, setShowDoodh] = useState(false);
 
-  // Current month for calendar
+  // Stable refs — let callbacks read latest values without being recreated
+  const logsRef = useRef(logs);
+  logsRef.current = logs;
+  const tasksRef = useRef(tasks);
+  tasksRef.current = tasks;
+  const selectedTaskIdRef = useRef(selectedTaskId);
+  selectedTaskIdRef.current = selectedTaskId;
+
+  // today is session-constant — initialize once
+  const [today] = useState(() => new Date().toISOString().split("T")[0]);
+
   const now = new Date();
   const [currentMonth, setCurrentMonth] = useState(
     `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`
   );
-  const today = now.toISOString().split("T")[0];
 
-  // Fetch tasks then logs in one chain — avoids the double task-fetch
-  // that happened when fetchTasks + getLogsForAllTasks both called getTasks.
   const fetchData = useCallback(async () => {
     if (!user) return;
     try {
@@ -66,18 +79,16 @@ export default function Home() {
     }
   }, [user, authLoading, fetchData]);
 
-  // Toggle log — optimistic update so UI responds instantly
-  const handleToggleLog = async (taskId: string, date: string) => {
+  // Stable toggle — reads latest logs via ref, not closure capture
+  const handleToggleLog = useCallback(async (taskId: string, date: string) => {
     if (!user) return;
 
-    const existingLog = logs.find((l) => l.taskId === taskId && l.logDate === date);
+    const existingLog = logsRef.current.find((l) => l.taskId === taskId && l.logDate === date);
 
     if (existingLog) {
-      // Optimistically remove
       setLogs((prev) => prev.filter((l) => l.id !== existingLog.id));
     } else {
-      // Optimistically add a placeholder
-      const tempLog: import("@/types/api").DailyLog = {
+      const tempLog: DailyLog = {
         id: `temp-${taskId}-${date}`,
         taskId,
         logDate: date,
@@ -88,7 +99,6 @@ export default function Home() {
 
     try {
       const result = await store.toggleLog(taskId, date);
-      // Replace temp placeholder with the real DB record
       if (result.created && result.log) {
         setLogs((prev) =>
           prev.map((l) =>
@@ -98,51 +108,48 @@ export default function Home() {
       }
     } catch (e) {
       console.error("Failed to toggle log:", e);
-      // Revert on error by refetching
-      fetchLogs(tasks.map((t) => t.id));
+      fetchLogs(tasksRef.current.map((t) => t.id));
     }
-  };
+  }, [user, fetchLogs]);
 
-  // Delete task
-  const handleDeleteTask = async (taskId: string) => {
+  // Stable today-toggle — avoids inline arrow in JSX that breaks TaskList memo
+  const handleToggleToday = useCallback((taskId: string) => {
+    handleToggleLog(taskId, today);
+  }, [handleToggleLog, today]);
+
+  const handleDeleteTask = useCallback(async (taskId: string) => {
     try {
       await store.deleteTask(taskId);
       setTasks(prev => prev.filter(t => t.id !== taskId));
-      if (selectedTaskId === taskId) setSelectedTaskId(null);
+      if (selectedTaskIdRef.current === taskId) setSelectedTaskId(null);
     } catch (e) {
       console.error("Failed to delete task:", e);
       alert("Failed to delete habit. Please try again.");
     }
-  };
+  }, []);
 
-  // Habit slider navigation
-  const handlePrevHabit = () => {
-    if (tasks.length === 0) return;
-    const idx = tasks.findIndex(t => t.id === selectedTaskId);
-    const prevIdx = idx <= 0 ? tasks.length - 1 : idx - 1;
-    setSelectedTaskId(tasks[prevIdx].id);
-  };
+  // Stable nav handlers — read latest tasks/selectedTaskId via refs
+  const handlePrevHabit = useCallback(() => {
+    const ts = tasksRef.current;
+    if (ts.length === 0) return;
+    const idx = ts.findIndex(t => t.id === selectedTaskIdRef.current);
+    setSelectedTaskId(ts[idx <= 0 ? ts.length - 1 : idx - 1].id);
+  }, []);
 
-  const handleNextHabit = () => {
-    if (tasks.length === 0) return;
-    const idx = tasks.findIndex(t => t.id === selectedTaskId);
-    const nextIdx = idx === -1 || idx === tasks.length - 1 ? 0 : idx + 1;
-    setSelectedTaskId(tasks[nextIdx].id);
-  };
+  const handleNextHabit = useCallback(() => {
+    const ts = tasksRef.current;
+    if (ts.length === 0) return;
+    const idx = ts.findIndex(t => t.id === selectedTaskIdRef.current);
+    setSelectedTaskId(ts[idx === -1 || idx === ts.length - 1 ? 0 : idx + 1].id);
+  }, []);
 
-  // Create task
-  const handleCreateTask = async (data: { name: string; frequency: Frequency; color: string }) => {
+  const handleCreateTask = useCallback(async (data: { name: string; frequency: Frequency; color: string }) => {
     if (!user) return;
     setSaving(true);
     try {
-      console.log("Creating task for user:", user.id, data);
       const newTask = await store.createTask(user.id, data);
-
-      // Optimistic Update: Add the new task to state immediately
       setTasks(prev => [...prev, newTask]);
       setShowForm(false);
-
-      // Background refresh to ensure everything is in sync
       fetchData();
     } catch (e) {
       console.error("Failed to create task:", e);
@@ -150,28 +157,65 @@ export default function Home() {
     } finally {
       setSaving(false);
     }
-  };
+  }, [user, fetchData]);
 
-  const handleLogout = async () => {
+  const handleLogout = useCallback(async () => {
     await supabase.auth.signOut();
-  };
+  }, []);
 
-  // Compute streaks for all tasks
+  // ── Derived state — all memoized to avoid recalculation on every render ──
+
   const streaks = useMemo(() => {
     const map = new Map<string, number>();
     tasks.forEach((task) => {
       const taskLogs = logs.filter((l) => l.taskId === task.id);
-      const result = computeStreak(taskLogs, task.frequency, today);
-      map.set(task.id, result.currentStreak);
+      map.set(task.id, computeStreak(taskLogs, task.frequency, today).currentStreak);
     });
     return map;
   }, [tasks, logs, today]);
 
-  if (authLoading || (user && loading)) {
+  const selectedTask = useMemo(
+    () => tasks.find((t) => t.id === selectedTaskId) ?? null,
+    [tasks, selectedTaskId]
+  );
+
+  const selectedTaskLogs = useMemo(
+    () => (selectedTaskId ? logs.filter((l) => l.taskId === selectedTaskId) : []),
+    [logs, selectedTaskId]
+  );
+
+  const selectedStreak = useMemo(
+    () => (selectedTask ? computeStreak(selectedTaskLogs, selectedTask.frequency, today) : null),
+    [selectedTask, selectedTaskLogs, today]
+  );
+
+  const selectedCompletionRate = useMemo(
+    () =>
+      selectedTask
+        ? computeCompletionRate(selectedTaskLogs, selectedTask.frequency, {
+            start: addDays(today, -29),
+            end: today,
+          })
+        : 0,
+    [selectedTask, selectedTaskLogs, today]
+  );
+
+  // Stable filtered logs for Calendar — avoids new array ref on every unrelated re-render
+  const calendarLogs = useMemo(
+    () => (selectedTaskId ? logs.filter(l => l.taskId === selectedTaskId) : logs),
+    [logs, selectedTaskId]
+  );
+
+  const habitIndex = useMemo(
+    () => tasks.findIndex(t => t.id === selectedTaskId),
+    [tasks, selectedTaskId]
+  );
+
+  // ── Auth check only (very fast — just reads local session) ──
+  if (authLoading) {
     return (
       <div className="loading-screen">
         <div className="loading-spinner" />
-        <p>Loading VibeCalendar...</p>
       </div>
     );
   }
@@ -180,24 +224,7 @@ export default function Home() {
     return <AuthPage />;
   }
 
-  // Selected task analytics
-  const selectedTask = tasks.find((t) => t.id === selectedTaskId);
-  const selectedTaskLogs = selectedTaskId
-    ? logs.filter((l) => l.taskId === selectedTaskId)
-    : [];
-
-  let selectedStreak: StreakResult | null = null;
-  let selectedCompletionRate = 0;
-
-  if (selectedTask) {
-    selectedStreak = computeStreak(selectedTaskLogs, selectedTask.frequency, today);
-    selectedCompletionRate = computeCompletionRate(
-      selectedTaskLogs,
-      selectedTask.frequency,
-      { start: addDays(today, -29), end: today }
-    );
-  }
-
+  // ── App renders immediately with empty state; data populates async ──
   return (
     <main className="app-layout">
       {/* Sidebar */}
@@ -224,7 +251,7 @@ export default function Home() {
           logs={logs}
           selectedTaskId={selectedTaskId}
           onSelectTask={setSelectedTaskId}
-          onToggleToday={(taskId) => handleToggleLog(taskId, today)}
+          onToggleToday={handleToggleToday}
           onDeleteTask={handleDeleteTask}
           streaks={streaks}
           today={today}
@@ -258,7 +285,7 @@ export default function Home() {
       <div className="main-content">
         <Calendar
           tasks={tasks}
-          logs={selectedTaskId ? logs.filter(l => l.taskId === selectedTaskId) : logs}
+          logs={calendarLogs}
           currentMonth={currentMonth}
           onMonthChange={setCurrentMonth}
           onToggleLog={handleToggleLog}
@@ -267,11 +294,10 @@ export default function Home() {
           selectedTaskColor={selectedTask?.color}
           onPrevHabit={handlePrevHabit}
           onNextHabit={handleNextHabit}
-          habitIndex={tasks.findIndex(t => t.id === selectedTaskId)}
+          habitIndex={habitIndex}
           habitCount={tasks.length}
         />
 
-        {/* Analytics panel */}
         {selectedTask && selectedStreak && (
           <div className="analytics-panel">
             <AnalyticsDashboard
@@ -292,7 +318,6 @@ export default function Home() {
         )}
       </div>
 
-      {/* Task creation modal */}
       {showForm && (
         <TaskForm
           onSubmit={handleCreateTask}
@@ -301,7 +326,6 @@ export default function Home() {
         />
       )}
 
-      {/* Doodh ka Hisaab overlay */}
       {showDoodh && (
         <div className="fixed inset-0 z-40 bg-[#FAFBFF] overflow-y-auto">
           <DoodhKaHisaab onClose={() => setShowDoodh(false)} />
