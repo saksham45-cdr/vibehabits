@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { fadeUp, staggerContainer } from '@/app/landing/page'
+import { fadeUp, staggerContainer } from '@/app/page'
 
 const pills = [
   { icon: '📅', title: 'Daily Check-in', sub: '10 seconds. Done.' },

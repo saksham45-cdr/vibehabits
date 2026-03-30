@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { fadeUp, fadeIn, staggerContainer, slideLeft } from '@/app/landing/page'
+import { fadeUp, fadeIn, staggerContainer, slideLeft } from '@/app/page'
 
 const Divider = () => (
   <div style={{ width: '60px', height: '1px', background: 'rgba(255,255,255,0.08)', margin: '56px auto' }} />

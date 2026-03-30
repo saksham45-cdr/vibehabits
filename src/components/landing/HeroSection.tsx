@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { fadeUp, fadeIn } from '@/app/landing/page'
+import { fadeUp, fadeIn } from '@/app/page'
 
 const tileIndices = Array.from({ length: 21 }, (_, i) => i)
 const violetTiles = new Set([0, 1, 2, 4, 5, 7, 8, 9, 11, 13, 14])

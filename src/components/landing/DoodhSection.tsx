@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { fadeUp, fadeIn, staggerContainer } from '@/app/landing/page'
+import { fadeUp, fadeIn, staggerContainer } from '@/app/page'
 
 const featureRows = [
   'Log daily milk delivery — morning, evening, or both',
