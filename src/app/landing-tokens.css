@@ -1,0 +1,58 @@
+:root {
+  --bg-base: #07070F;
+  --bg-glass: rgba(255, 255, 255, 0.035);
+  --bg-glass-hover: rgba(255, 255, 255, 0.065);
+  --bg-glass-teal: rgba(34, 212, 168, 0.04);
+  --border-glass: rgba(255, 255, 255, 0.075);
+  --border-teal: rgba(34, 212, 168, 0.15);
+  --accent-violet: #8B7CF8;
+  --accent-teal: #22D4A8;
+  --accent-orange: #FF7A4A;
+  --text-primary: #EEEEFF;
+  --text-muted: rgba(238, 238, 255, 0.45);
+  --text-faint: rgba(238, 238, 255, 0.2);
+  --glow-violet: rgba(139, 124, 248, 0.18);
+  --glow-teal: rgba(34, 212, 168, 0.14);
+  --font-display: 'Syne', sans-serif;
+  --font-body: 'Instrument Sans', sans-serif;
+}
+
+.landing-page {
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  overflow-x: hidden;
+}
+
+.glass-card {
+  background: var(--bg-glass);
+  border: 1px solid var(--border-glass);
+  border-radius: 20px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.glass-card-teal {
+  background: var(--bg-glass-teal);
+  border: 1px solid var(--border-teal);
+  border-radius: 24px;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+
+/* Noise texture overlay — apply to sections */
+.noise-overlay::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  opacity: 0.025;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Milk fill animation — triggered via Framer Motion */
+@keyframes milk-fill {
+  from { clip-path: inset(100% 0 0 0); }
+  to   { clip-path: inset(0% 0 0 0); }
+}
