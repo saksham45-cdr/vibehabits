@@ -100,25 +100,37 @@ export default function FinalCTASection() {
           viewport={{ once: true, margin: '-80px' }}
           style={{ marginTop: '56px' }}
         >
-          <motion.button
-            whileHover={{ scale: 1.04, boxShadow: '0 0 80px rgba(139,124,248,0.6)' }}
-            whileTap={{ scale: 0.97 }}
-            onClick={() => router.push('/dashboard')}
-            style={{
-              fontFamily: 'var(--font-display)',
-              fontWeight: 700,
-              fontSize: '18px',
-              background: 'var(--accent-violet)',
-              color: 'white',
-              padding: '18px 48px',
+          {/* Pulsing ambient glow behind button — separate element avoids hover conflict */}
+          <div style={{ position: 'relative', display: 'inline-block' }}>
+            <div className="anim-cta-glow" style={{
+              position: 'absolute',
+              inset: '-2px',
               borderRadius: '999px',
-              boxShadow: '0 0 60px rgba(139,124,248,0.42)',
-              border: 'none',
-              cursor: 'pointer',
-            }}
-          >
-            → Start Tracking — It&apos;s Free
-          </motion.button>
+              background: 'var(--accent-violet)',
+              filter: 'blur(22px)',
+              zIndex: 0,
+            }} />
+            <motion.button
+              whileHover={{ scale: 1.04, boxShadow: '0 0 80px rgba(139,124,248,0.6)' }}
+              whileTap={{ scale: 0.97 }}
+              onClick={() => router.push('/dashboard')}
+              style={{
+                position: 'relative',
+                zIndex: 1,
+                fontFamily: 'var(--font-display)',
+                fontWeight: 700,
+                fontSize: '18px',
+                background: 'var(--accent-violet)',
+                color: 'white',
+                padding: '18px 48px',
+                borderRadius: '999px',
+                border: 'none',
+                cursor: 'pointer',
+              }}
+            >
+              → Start Tracking — It&apos;s Free
+            </motion.button>
+          </div>
           <p style={{
             fontFamily: 'var(--font-body)',
             fontSize: '13px',

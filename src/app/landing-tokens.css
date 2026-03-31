@@ -29,12 +29,15 @@ body:has(.landing-page) {
   overflow-x: hidden;
 }
 
+/* ── Glass cards ─────────────────────────────────────────── */
+
 .glass-card {
   background: var(--bg-glass);
   border: 1px solid var(--border-glass);
   border-radius: 20px;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
+  transition: background 0.22s ease, box-shadow 0.22s ease;
 }
 
 .glass-card-teal {
@@ -43,21 +46,95 @@ body:has(.landing-page) {
   border-radius: 24px;
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
+  transition: background 0.22s ease, box-shadow 0.22s ease;
 }
 
-/* Noise texture overlay — apply to sections */
+/* ── Noise texture overlay ───────────────────────────────── */
+
 .noise-overlay::before {
   content: '';
   position: absolute;
   inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height%3D'100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
   opacity: 0.025;
   pointer-events: none;
   z-index: 0;
 }
 
-/* Milk fill animation — triggered via Framer Motion */
+/* ── Milk fill animation ─────────────────────────────────── */
+
 @keyframes milk-fill {
   from { clip-path: inset(100% 0 0 0); }
   to   { clip-path: inset(0% 0 0 0); }
+}
+
+/* ── Background blob drift ───────────────────────────────── */
+
+@keyframes blob-drift {
+  0%, 100% { transform: translate(0%,    0%)   scale(1);    }
+  33%       { transform: translate(2.5%, -3.5%) scale(1.05); }
+  66%       { transform: translate(-2%,  2%)    scale(0.96); }
+}
+
+@keyframes blob-drift-alt {
+  0%, 100% { transform: translate(0%,   0%)   scale(1);    }
+  40%       { transform: translate(-3%,  2.5%) scale(1.04); }
+  70%       { transform: translate(2%,  -2%)   scale(0.97); }
+}
+
+/* ── Calendar / card float ───────────────────────────────── */
+
+@keyframes float-gentle {
+  0%, 100% { transform: translateY(0px);  }
+  50%       { transform: translateY(-7px); }
+}
+
+/* ── CTA ambient glow pulse ──────────────────────────────── */
+
+@keyframes cta-glow-pulse {
+  0%, 100% { opacity: 0.45; }
+  50%       { opacity: 0.85; }
+}
+
+/* ── Utility animation classes ───────────────────────────── */
+
+.anim-blob {
+  animation: blob-drift 14s ease-in-out infinite;
+  will-change: transform;
+}
+
+.anim-blob-alt {
+  animation: blob-drift-alt 20s ease-in-out infinite;
+  will-change: transform;
+}
+
+.anim-float {
+  animation: float-gentle 5.5s ease-in-out infinite;
+  will-change: transform;
+}
+
+.anim-cta-glow {
+  animation: cta-glow-pulse 3.5s ease-in-out infinite;
+}
+
+/* ── Section connection gradient ─────────────────────────── */
+
+.section-fade-top {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 80px;
+  background: linear-gradient(to bottom, var(--bg-base), transparent);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ── Reduced motion — disable all decorative animations ─── */
+
+@media (prefers-reduced-motion: reduce) {
+  .anim-blob,
+  .anim-blob-alt,
+  .anim-float,
+  .anim-cta-glow {
+    animation: none;
+  }
 }

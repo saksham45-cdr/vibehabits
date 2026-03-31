@@ -92,8 +92,13 @@ export default function ProductIntroSection() {
               <motion.div
                 key={title}
                 variants={fadeUp}
+                whileHover={{
+                  scale: 1.03,
+                  boxShadow: '0 0 0 1px rgba(139,124,248,0.2), 0 8px 28px rgba(0,0,0,0.35)',
+                }}
+                transition={{ duration: 0.2, ease: 'easeOut' }}
                 className="glass-card"
-                style={{ padding: '20px 18px' }}
+                style={{ padding: '20px 18px', cursor: 'default' }}
               >
                 <div style={{ fontSize: '22px' }}>{icon}</div>
                 <p style={{

@@ -34,9 +34,11 @@ export default function ValueLinesSection() {
             style={{
               fontFamily: 'var(--font-display)',
               fontWeight: 700,
-              fontSize: 'clamp(22px, 3vw, 30px)',
+              fontSize: 'clamp(22px, 3vw, 32px)',
               color: 'var(--text-primary)',
-              margin: '0 0 8px 0',
+              letterSpacing: '-0.02em',
+              lineHeight: 1.4,
+              margin: '0 0 6px 0',
             }}
           >
             {line}
@@ -82,9 +84,12 @@ export default function ValueLinesSection() {
           style={{
             fontFamily: 'var(--font-display)',
             fontWeight: 800,
-            fontSize: 'clamp(28px, 4vw, 40px)',
+            fontSize: 'clamp(34px, 5.5vw, 58px)',
             color: 'var(--accent-teal)',
-            marginTop: '8px',
+            letterSpacing: '-0.03em',
+            lineHeight: 1.1,
+            marginTop: '12px',
+            textShadow: '0 0 64px rgba(34,212,168,0.4)',
           }}
         >
           Did you do it today?
@@ -101,9 +106,9 @@ export default function ValueLinesSection() {
         viewport={{ once: true, margin: '-80px' }}
       >
         {[
-          { text: 'See your whole month at a glance.', weight: 600, size: '24px', color: 'var(--text-muted)' },
-          { text: 'Spot your gaps. Fix your patterns.', weight: 600, size: '24px', color: 'var(--text-muted)' },
-          { text: 'Actually know yourself.', weight: 700, size: '26px', color: 'var(--text-primary)' },
+          { text: 'See your whole month at a glance.', weight: 500, size: 'clamp(18px, 2.2vw, 24px)', color: 'var(--text-muted)' },
+          { text: 'Spot your gaps. Fix your patterns.', weight: 500, size: 'clamp(18px, 2.2vw, 24px)', color: 'var(--text-muted)' },
+          { text: 'Actually know yourself.', weight: 800, size: 'clamp(22px, 3vw, 30px)', color: 'var(--text-primary)' },
         ].map(({ text, weight, size, color }) => (
           <motion.p
             key={text}

@@ -41,17 +41,17 @@ export default function HeroSection() {
         backgroundColor: 'var(--bg-base)',
       }}
     >
-      {/* Radial top-right */}
-      <div style={{
+      {/* Animated blob — violet, top-right */}
+      <div className="anim-blob" style={{
         position: 'absolute', width: '100%', height: '100%', top: 0, left: 0,
-        background: 'radial-gradient(ellipse 80% 60% at 68% 18%, rgba(139,124,248,0.11) 0%, transparent 60%)',
+        background: 'radial-gradient(ellipse 80% 60% at 68% 18%, rgba(139,124,248,0.13) 0%, transparent 60%)',
         zIndex: 0,
       }} />
 
-      {/* Radial bottom-left */}
-      <div style={{
+      {/* Animated blob — teal, bottom-left */}
+      <div className="anim-blob-alt" style={{
         position: 'absolute', width: '100%', height: '100%', top: 0, left: 0,
-        background: 'radial-gradient(ellipse 50% 45% at 8% 88%, rgba(34,212,168,0.07) 0%, transparent 55%)',
+        background: 'radial-gradient(ellipse 50% 45% at 8% 88%, rgba(34,212,168,0.08) 0%, transparent 55%)',
         zIndex: 0,
       }} />
 
@@ -89,10 +89,10 @@ export default function HeroSection() {
           style={{
             fontFamily: 'var(--font-display)',
             fontWeight: 800,
-            fontSize: 'clamp(36px, 6vw, 68px)',
-            lineHeight: 1.08,
+            fontSize: 'clamp(36px, 6vw, 72px)',
+            lineHeight: 1.06,
             color: 'var(--text-primary)',
-            letterSpacing: '-0.03em',
+            letterSpacing: '-0.035em',
             margin: 0,
           }}
         >
@@ -171,13 +171,18 @@ export default function HeroSection() {
           No signup chaos. No clutter. Just open and start.
         </motion.p>
 
-        {/* Calendar Preview Card */}
+        {/* Calendar Preview Card — enters then floats gently */}
         <motion.div
           initial={{ opacity: 0, y: 40, scale: 0.97 }}
-          animate={{ opacity: 0.55, y: 0, scale: 1 }}
+          animate={{ opacity: 0.58, y: 0, scale: 1 }}
           transition={{ delay: 0.7, duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
+          style={{ maxWidth: '420px', margin: '72px auto 0' }}
+        >
+        <motion.div
+          animate={{ y: [0, -7, 0] }}
+          transition={{ duration: 5.5, repeat: Infinity, ease: 'easeInOut', delay: 1.8 }}
           className="glass-card"
-          style={{ padding: '24px', maxWidth: '420px', margin: '72px auto 0' }}
+          style={{ padding: '24px' }}
         >
           <p style={{
             fontFamily: 'var(--font-display)',
@@ -206,6 +211,7 @@ export default function HeroSection() {
               />
             ))}
           </div>
+        </motion.div>
         </motion.div>
 
       </div>
