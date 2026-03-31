@@ -17,6 +17,11 @@
   --font-body: 'Instrument Sans', sans-serif;
 }
 
+/* Override the app-level overflow:hidden so the landing page can scroll */
+body:has(.landing-page) {
+  overflow: auto;
+}
+
 .landing-page {
   background-color: var(--bg-base);
   color: var(--text-primary);
