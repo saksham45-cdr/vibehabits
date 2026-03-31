@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import dynamic from "next/dynamic";
+import { useRouter } from "next/navigation";
 import Calendar from "@/components/Calendar";
 import TaskList from "@/components/TaskList";
 import TaskForm from "@/components/TaskForm";
@@ -23,6 +24,7 @@ const DoodhKaHisaab = dynamic(() => import("@/components/DoodhKaHisaab"), {
 
 export default function Home() {
   const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [logs, setLogs] = useState<DailyLog[]>([]);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
@@ -46,6 +48,19 @@ export default function Home() {
   const [currentMonth, setCurrentMonth] = useState(
     `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`
   );
+
+  // Auto-open Doodh ka Hisaab when landing page CTA sends user here via ?open=doodh.
+  // Works for both new logins (URL persists through AuthPage) and already-authed users.
+  useEffect(() => {
+    if (!user) return;
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('open') === 'doodh') {
+      setShowDoodh(true);
+      // Clean up the param so a hard-refresh does not reopen the modal.
+      router.replace('/dashboard', { scroll: false });
+    }
+  }, [user, router]);
 
   const fetchData = useCallback(async () => {
     if (!user) return;
