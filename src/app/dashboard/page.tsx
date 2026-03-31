@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
 import Calendar from "@/components/Calendar";
 import TaskList from "@/components/TaskList";
 import TaskForm from "@/components/TaskForm";
@@ -32,6 +33,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showDoodh, setShowDoodh] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   // Stable refs — let callbacks read latest values without being recreated
   const logsRef = useRef(logs);
@@ -175,7 +177,9 @@ export default function Home() {
   }, [user, fetchData]);
 
   const handleLogout = useCallback(async () => {
+    setLoggingOut(true);
     await supabase.auth.signOut();
+    // No reset needed — auth state change unmounts this component.
   }, []);
 
   // ── Derived state — all memoized to avoid recalculation on every render ──
@@ -288,12 +292,52 @@ export default function Home() {
           </button>
         </div>
 
-        <button className="logout-btn" onClick={handleLogout}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" />
-          </svg>
-          Logout
-        </button>
+        <motion.button
+          className="logout-btn"
+          onClick={handleLogout}
+          disabled={loggingOut}
+          whileHover={!loggingOut ? { scale: 1.02 } : undefined}
+          whileTap={!loggingOut ? { scale: 0.97 } : undefined}
+          transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+          style={{ overflow: "hidden", justifyContent: "center" }}
+        >
+          <AnimatePresence mode="wait" initial={false}>
+            {loggingOut ? (
+              <motion.span
+                key="spinner"
+                initial={{ opacity: 0, scale: 0.75 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.75 }}
+                transition={{ duration: 0.15 }}
+                style={{ display: "flex", alignItems: "center", gap: "8px" }}
+              >
+                <motion.svg
+                  width="14" height="14" viewBox="0 0 16 16" fill="none"
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 0.75, repeat: Infinity, ease: "linear" }}
+                >
+                  <circle cx="8" cy="8" r="6" stroke="var(--error)" strokeWidth="2" strokeOpacity="0.3" />
+                  <path d="M14 8A6 6 0 0 0 8 2" stroke="var(--error)" strokeWidth="2" strokeLinecap="round" />
+                </motion.svg>
+                Signing out...
+              </motion.span>
+            ) : (
+              <motion.span
+                key="label"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
+                style={{ display: "flex", alignItems: "center", gap: "8px" }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" />
+                </svg>
+                Logout
+              </motion.span>
+            )}
+          </AnimatePresence>
+        </motion.button>
       </aside>
 
       {/* Main content */}
