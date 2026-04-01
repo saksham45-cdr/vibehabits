@@ -106,22 +106,33 @@ const Calendar = memo(function Calendar({
         const startPad = firstDay.getDay();
         const totalDays = lastDay.getDate();
 
+        // Format using local date components — never toISOString(), which converts
+        // to UTC and shifts the date backward for any UTC+ timezone (e.g. IST).
+        // The current-month loop below already does this correctly; leading and
+        // trailing loops must do the same or their date strings collide with
+        // in-month dates, producing duplicate React keys and broken rendering.
+        const fmt = (d: Date) =>
+            `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
         const days: { date: string; inMonth: boolean; day: number }[] = [];
 
+        // Leading days from the previous month
         for (let i = startPad - 1; i >= 0; i--) {
             const d = new Date(year, month - 1, -i);
-            days.push({ date: d.toISOString().split("T")[0], inMonth: false, day: d.getDate() });
+            days.push({ date: fmt(d), inMonth: false, day: d.getDate() });
         }
 
+        // Current month days — string-formatted directly, no Date object needed
         for (let d = 1; d <= totalDays; d++) {
             const dateStr = `${year}-${String(month).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
             days.push({ date: dateStr, inMonth: true, day: d });
         }
 
+        // Trailing days from the next month
         const remaining = 42 - days.length;
         for (let i = 1; i <= remaining; i++) {
             const d = new Date(year, month, i);
-            days.push({ date: d.toISOString().split("T")[0], inMonth: false, day: d.getDate() });
+            days.push({ date: fmt(d), inMonth: false, day: d.getDate() });
         }
 
         return days;
