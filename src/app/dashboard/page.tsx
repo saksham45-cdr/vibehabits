@@ -70,22 +70,27 @@ export default function Home() {
       const tasksData = await store.getTasks(user.id);
       setTasks(tasksData || []);
       const taskIds = (tasksData || []).map((t) => t.id);
-      const logsData = await store.getLogsForTaskIds(taskIds, currentMonth);
+      // No month filter — fetch full history so streak is computed across all dates,
+      // not just the currently viewed month. Calendar renders only current-month cells
+      // regardless of how many logs are in memory, so this is safe.
+      const logsData = await store.getLogsForTaskIds(taskIds);
       setLogs(logsData || []);
     } catch (e) {
       console.error("Failed to fetch data:", e);
     }
-  }, [user, currentMonth]);
+  }, [user]);
 
   const fetchLogs = useCallback(async (taskIds: string[]) => {
     if (!user) return;
     try {
-      const logsData = await store.getLogsForTaskIds(taskIds, currentMonth);
+      // Same as fetchData: no month filter so streak recovery after a toggle
+      // error still has full cross-month history.
+      const logsData = await store.getLogsForTaskIds(taskIds);
       setLogs(logsData || []);
     } catch (e) {
       console.error("Failed to fetch logs:", e);
     }
-  }, [user, currentMonth]);
+  }, [user]);
 
   useEffect(() => {
     if (user) {
