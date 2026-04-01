@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import Calendar from "@/components/Calendar";
 import TaskList from "@/components/TaskList";
 import TaskForm from "@/components/TaskForm";
@@ -292,6 +292,15 @@ export default function Home() {
           </button>
         </div>
 
+        {/*
+         * Logout button — concurrent opacity swap (no AnimatePresence mode="wait").
+         *
+         * mode="wait" was blocking the enter animation until the exit finished.
+         * When signOut() resolved mid-exit, AuthContext unmounted the component
+         * during that window, causing the UI glitch. Replaced with two
+         * position:absolute spans that cross-fade simultaneously — no blocking,
+         * no exit gate, safe to unmount at any point.
+         */}
         <motion.button
           className="logout-btn"
           onClick={handleLogout}
@@ -299,44 +308,42 @@ export default function Home() {
           whileHover={!loggingOut ? { scale: 1.02 } : undefined}
           whileTap={!loggingOut ? { scale: 0.97 } : undefined}
           transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
-          style={{ overflow: "hidden", justifyContent: "center" }}
+          style={{ overflow: "hidden", justifyContent: "center", position: "relative" }}
         >
-          <AnimatePresence mode="wait" initial={false}>
-            {loggingOut ? (
-              <motion.span
-                key="spinner"
-                initial={{ opacity: 0, scale: 0.75 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.75 }}
-                transition={{ duration: 0.15 }}
-                style={{ display: "flex", alignItems: "center", gap: "8px" }}
-              >
-                <motion.svg
-                  width="14" height="14" viewBox="0 0 16 16" fill="none"
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 0.75, repeat: Infinity, ease: "linear" }}
-                >
-                  <circle cx="8" cy="8" r="6" stroke="var(--error)" strokeWidth="2" strokeOpacity="0.3" />
-                  <path d="M14 8A6 6 0 0 0 8 2" stroke="var(--error)" strokeWidth="2" strokeLinecap="round" />
-                </motion.svg>
-                Signing out...
-              </motion.span>
-            ) : (
-              <motion.span
-                key="label"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.15 }}
-                style={{ display: "flex", alignItems: "center", gap: "8px" }}
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" />
-                </svg>
-                Logout
-              </motion.span>
-            )}
-          </AnimatePresence>
+          {/* Label — fades out when logging out */}
+          <motion.span
+            animate={{ opacity: loggingOut ? 0 : 1 }}
+            transition={{ duration: 0.15 }}
+            style={{ display: "flex", alignItems: "center", gap: "8px" }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" />
+            </svg>
+            Logout
+          </motion.span>
+
+          {/* Spinner — fades in when logging out; absolute so it doesn't shift layout */}
+          <motion.span
+            animate={{ opacity: loggingOut ? 1 : 0 }}
+            transition={{ duration: 0.15 }}
+            style={{
+              position:   "absolute",
+              display:    "flex",
+              alignItems: "center",
+              gap:        "8px",
+              pointerEvents: "none",
+            }}
+          >
+            <motion.svg
+              width="14" height="14" viewBox="0 0 16 16" fill="none"
+              animate={{ rotate: 360 }}
+              transition={{ duration: 0.75, repeat: Infinity, ease: "linear" }}
+            >
+              <circle cx="8" cy="8" r="6" stroke="var(--error)" strokeWidth="2" strokeOpacity="0.3" />
+              <path d="M14 8A6 6 0 0 0 8 2" stroke="var(--error)" strokeWidth="2" strokeLinecap="round" />
+            </motion.svg>
+            Signing out...
+          </motion.span>
         </motion.button>
       </aside>
 
